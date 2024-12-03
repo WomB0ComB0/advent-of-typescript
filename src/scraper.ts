@@ -1,15 +1,32 @@
+/**
+ * @fileoverview Scraper for fetching TypeScript challenges from Advent of TypeScript
+ * @module scraper
+ */
+
 import * as cheerio from 'cheerio';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import type { Browser, Page } from 'puppeteer';
 
+/**
+ * Represents a single TypeScript challenge
+ * @interface Challenge
+ * @property {string} description - The challenge description text
+ * @property {string} code - The initial TypeScript code/type definitions
+ * @property {string} tests - The test cases for the challenge
+ */
 interface Challenge {
   description: string;
   code: string;
   tests: string;
 }
 
+/**
+ * Custom error class for scraper-specific errors
+ * @class ScraperError
+ * @extends {Error}
+ */
 class ScraperError extends Error {
   constructor(message: string) {
     super(message);
@@ -17,6 +34,13 @@ class ScraperError extends Error {
   }
 }
 
+/**
+ * Extracts challenge content from HTML using Cheerio
+ * @async
+ * @param {string} html - Raw HTML content from the challenge page
+ * @returns {Promise<Challenge>} Parsed challenge content
+ * @throws {ScraperError} If required content cannot be found
+ */
 async function extractChallenge(html: string): Promise<Challenge> {
   try {
     const $ = cheerio.load(html);
@@ -52,6 +76,14 @@ async function extractChallenge(html: string): Promise<Challenge> {
   }
 }
 
+/**
+ * Fetches challenge content using Puppeteer
+ * @async
+ * @param {number} year - The challenge year
+ * @param {number} day - The challenge day (1-25)
+ * @returns {Promise<Challenge>} The fetched challenge content
+ * @throws {Error} If page elements cannot be found or navigation fails
+ */
 async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<Challenge> {
   const browser = await puppeteer.launch({
     headless: false,
@@ -93,6 +125,14 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
   }
 }
 
+/**
+ * Saves challenge content to the filesystem
+ * @async
+ * @param {number} year - The challenge year
+ * @param {number} day - The challenge day (1-25)
+ * @param {Challenge} content - The challenge content to save
+ * @throws {Error} If file operations fail
+ */
 async function saveChallenge(year: number, day: number, content: Challenge) {
   try {
     const baseDir = path.join(process.cwd(), year.toString(), day.toString());
@@ -146,6 +186,13 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
   }
 }
 
+/**
+ * Main execution function
+ * @async
+ * @description Parses command line arguments and orchestrates the scraping process
+ * @throws {ScraperError} If arguments are invalid
+ * @throws {Error} If scraping or saving fails
+ */
 async function main() {
   try {
     const args = Bun.argv.slice(2);
