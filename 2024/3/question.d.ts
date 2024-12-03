@@ -1,0 +1,1 @@
+const survivalRatio = (input) => {

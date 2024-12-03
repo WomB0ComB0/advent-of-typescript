@@ -1,11 +1,20 @@
 {
   "name": "advent-of-typescript",
-  "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start": "bun run src/scraper.ts",
+    "fetch": "bun test.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.5.32",
+    "cheerio": "^1.0.0",
+    "puppeteer": "^23.10.0",
+    "type-testing": "^0.2.0"
   }
 }
