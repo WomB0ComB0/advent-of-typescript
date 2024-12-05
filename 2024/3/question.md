@@ -21,24 +21,23 @@ code by Dimitri Mitropoulos on behalf of SquiggleConf>
 ## Initial Code
 ```typescript
 const survivalRatio = (input) => {
-```
-
-## Tests
-```typescript
 const data = annualData[input];
 if (!data) {
 throw new Error("Data not found");
 }
 return data.housingIndex / data.minimumWage;
 }
+
 type AnnualData = {
 [key: string]: {
 /** inflation corrected housing price index */
 housingIndex: number;
+
 /** inflation corrected North Pole minimum wage */
 minimumWage: number;
 };
 }
+
 const annualData: AnnualData = {
 2009: {
 housingIndex: 159.50891,
@@ -59,6 +58,11 @@ minimumWage: 96.31795
 2013: {
 housingIndex: 129.07457,
 minimumWage: 94.94066
+```
+
+## Tests
+```typescript
+
 export const reportForSanta = {
 2009: survivalRatio(2009),
 2010: survivalRatio(2010),

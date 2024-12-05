@@ -45,6 +45,7 @@ async function extractChallenge(html: string): Promise<Challenge> {
   try {
     const $ = cheerio.load(html);
     
+    // Get description
     const description = $('.prose-invert')
       .children()
       .map((_, el) => $(el).text().trim())
@@ -56,19 +57,24 @@ async function extractChallenge(html: string): Promise<Challenge> {
       throw new ScraperError('No description found');
     }
     
-    const codeElements = $('.view-line')
-      .map((_, el) => $(el).text().trim())
-      .get()
-      .filter(text => text.length > 0);
+    // Separate code blocks more reliably
+    const codeBlocks = $('.monaco-editor')
+      .map((_, editor) => {
+        return $(editor).find('.view-line')
+          .map((_, line) => $(line).text().trim())
+          .get()
+          .join('\n');
+      })
+      .get();
 
-    if (codeElements.length < 2) {
-      throw new ScraperError('Insufficient code elements found');
+    if (codeBlocks.length < 2) {
+      throw new ScraperError('Could not find both question and test code blocks');
     }
     
     return {
       description,
-      code: codeElements[0],
-      tests: codeElements.slice(1).join('\n')
+      code: codeBlocks[0],      // First editor is the question
+      tests: codeBlocks[1]      // Second editor is the tests
     };
   } catch (error) {
     console.error('Challenge extraction failed:', error);
