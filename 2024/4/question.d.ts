@@ -1,0 +1,1 @@
+minimumWage: 82.12546
