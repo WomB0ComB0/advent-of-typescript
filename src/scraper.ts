@@ -3,9 +3,9 @@
  * @module scraper
  */
 
-import * as cheerio from 'cheerio';
-import { mkdir, writeFile, rm } from 'fs/promises';
 import path from 'path';
+import * as cheerio from 'cheerio';
+import { mkdir, rm, writeFile } from 'fs/promises';
 import puppeteer from 'puppeteer';
 import type { Browser, Page } from 'puppeteer';
 
@@ -44,8 +44,7 @@ class ScraperError extends Error {
 async function extractChallenge(html: string): Promise<Challenge> {
   try {
     const $ = cheerio.load(html);
-    
-    // Get description
+
     const description = $('.prose-invert')
       .children()
       .map((_, el) => $(el).text().trim())
@@ -56,25 +55,35 @@ async function extractChallenge(html: string): Promise<Challenge> {
     if (!description) {
       throw new ScraperError('No description found');
     }
-    
-    // Separate code blocks more reliably
+
+    const cleanCode = (text: string) => {
+      return text
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\s*([{}[\]()<>:;,])\s*/g, '$1')
+        .trim();
+    };
+
     const codeBlocks = $('.monaco-editor')
       .map((_, editor) => {
-        return $(editor).find('.view-line')
-          .map((_, line) => $(line).text().trim())
-          .get()
-          .join('\n');
+        return cleanCode(
+          $(editor)
+            .find('.view-line')
+            .map((_, line) => $(line).text().trim())
+            .get()
+            .join('\n'),
+        );
       })
       .get();
 
     if (codeBlocks.length < 2) {
       throw new ScraperError('Could not find both question and test code blocks');
     }
-    
+
     return {
       description,
-      code: codeBlocks[0],      // First editor is the question
-      tests: codeBlocks[1]      // Second editor is the tests
+      code: codeBlocks[0],
+      tests: codeBlocks[1],
     };
   } catch (error) {
     console.error('Challenge extraction failed:', error);
@@ -93,26 +102,29 @@ async function extractChallenge(html: string): Promise<Challenge> {
 async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<Challenge> {
   const browser = await puppeteer.launch({
     headless: false,
-    defaultViewport: null
+    defaultViewport: null,
   });
   const page = await browser.newPage();
-  
+
   try {
     const url = `https://www.adventofts.com/events/${year}/${day}`;
     console.log(`Navigating to: ${url}`);
-    
+
     await page.goto(url, {
       waitUntil: 'networkidle0',
-      timeout: 30000
+      timeout: 30000,
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const content = await page.content();
     console.log('Page content:', content.substring(0, 200) + '...');
 
-    const description = await page.waitForSelector('.prose-invert, [data-testid="challenge-description"]', {
-      timeout: 10000
-    });
+    const description = await page.waitForSelector(
+      '.prose-invert, [data-testid="challenge-description"]',
+      {
+        timeout: 10000,
+      },
+    );
 
     if (!description) {
       throw new Error('Could not find challenge description');
@@ -142,8 +154,13 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
 async function saveChallenge(year: number, day: number, content: Challenge) {
   try {
     const baseDir = path.join(process.cwd(), year.toString(), day.toString());
-    
-    try { await rm(baseDir, { recursive: true, force: true }) } catch {} finally { console.log(`Deleted directory ${baseDir}`) }
+
+    try {
+      await rm(baseDir, { recursive: true, force: true });
+    } catch {
+    } finally {
+      console.log(`Deleted directory ${baseDir}`);
+    }
 
     await mkdir(baseDir, { recursive: true, mode: 0o755 });
 
@@ -160,31 +177,30 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
       '## Tests',
       '```typescript',
       content.tests,
-      '```'
+      '```',
     ].join('\n');
-    
+
     const tsConfig = {
-      "extends": "../../tsconfig.json",
-      "compilerOptions": {
-        "verbatimModuleSyntax": true,
-        "noEmit": true,
-        "paths": {
-          "*": ["./*"]
-        }
+      extends: '../../tsconfig.json',
+      compilerOptions: {
+        verbatimModuleSyntax: true,
+        noEmit: true,
+        paths: {
+          '*': ['./*'],
+        },
       },
-      "include": [
-        "question.d.ts",
-        "tests.ts"
-      ]
+      include: ['question.d.ts', 'tests.ts'],
     };
 
     await Promise.all([
       writeFile(path.join(baseDir, 'question.md'), questionContent, { mode: 0o644 }),
       writeFile(path.join(baseDir, 'question.d.ts'), content.code, { mode: 0o644 }),
       writeFile(path.join(baseDir, 'tests.ts'), content.tests, { mode: 0o644 }),
-      writeFile(path.join(baseDir, 'tsconfig.json'), JSON.stringify(tsConfig, null, 2), { mode: 0o644 })
+      writeFile(path.join(baseDir, 'tsconfig.json'), JSON.stringify(tsConfig, null, 2), {
+        mode: 0o644,
+      }),
     ]);
-    
+
     console.log(`Challenge for day ${day} saved successfully`);
   } catch (error) {
     console.error('Challenge save failed:', error);
@@ -202,7 +218,7 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
 async function main() {
   try {
     const args = Bun.argv.slice(2);
-    
+
     if (args.length !== 2) {
       throw new ScraperError('Usage: bun run scraper.ts <year> <day>');
     }
@@ -216,7 +232,7 @@ async function main() {
 
     const challenge = await fetchChallengeWithPuppeteer(year, day);
     await saveChallenge(year, day, challenge);
-    
+
     console.log(`Successfully processed challenge for ${year}/day${day}`);
   } catch (error) {
     console.error('Scraper execution failed:', error);

@@ -1,4 +1,4 @@
-import type { Expect, Equal } from 'type-testing';
+import type { Equal, Expect } from 'type-testing';
 
 /** `Demand` corresponds to the type you supply/modify */
 type t0_actual = Demand;    // => type t0_actual = unknown

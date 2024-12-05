@@ -1,1 +1,1 @@
-type CookieSurveyInput = unknown;
+type CookieSurveyInput<T> = keyof T;

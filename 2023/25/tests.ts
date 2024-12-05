@@ -1,3 +1,3 @@
-import { Expect, Equal } from 'type-testing';
+import type { Equal, Expect } from 'type-testing';
 
-type ThankYouSoMuch = Expect<Equal<true, true>>;
+type ThankYouSoMuch = Expect<Equal<true, true>>;

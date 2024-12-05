@@ -2,7 +2,7 @@ import { $ } from 'bun';
 
 async function main() {
   const year = Number(Bun.argv[2]) || 2023;
-  
+
   if (year < 2023 || year > new Date().getFullYear()) {
     console.error(`Year ${year} is out of range (2023-${new Date().getFullYear()})`);
     return;

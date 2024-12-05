@@ -1,5 +1,5 @@
-type GiftWrapper = {
-present: unknown;
-from: unknown;
-to: unknown;
-}
+type GiftWrapper<T, U, R> = {
+  present: T;
+  from: U;
+  to: R;
+};

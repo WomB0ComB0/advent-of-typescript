@@ -1,4 +1,4 @@
-import { Expect, Equal } from 'type-testing';
+import type { Equal, Expect } from 'type-testing';
 
 type test_0_actual = FilterChildrenBy<
 //   ^? type test_0_actual = any

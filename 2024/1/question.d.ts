@@ -1,1 +1,1 @@
-type Demand = unknown;
+type Demand = number;

@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/scraper.ts",
+    "lint": "bunx biome check --write ./ || true",
     "fetch": "bun test.ts"
   },
   "devDependencies": {
@@ -12,6 +13,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/jquery": "^3.5.32",
     "cheerio": "^1.0.0",
     "puppeteer": "^23.10.0",

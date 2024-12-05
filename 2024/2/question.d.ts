@@ -1,1 +1,1 @@
-type Demand = number;
+type Demand = 900_000;
