@@ -17,6 +17,7 @@
     "@types/jquery": "^3.5.32",
     "cheerio": "^1.0.0",
     "puppeteer": "^23.10.0",
+    "strip-ansi": "^7.1.0",
     "type-testing": "^0.2.0"
   }
 }

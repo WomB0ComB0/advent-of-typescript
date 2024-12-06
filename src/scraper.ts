@@ -7,6 +7,7 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 import { mkdir, rm, writeFile } from 'fs/promises';
 import puppeteer from 'puppeteer';
+import { $ } from 'bun';
 import type { Browser, Page } from 'puppeteer';
 
 /**
@@ -192,9 +193,16 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
       include: ['question.d.ts', 'tests.ts'],
     };
 
+    const cleanedCode = content.code
+      .replace(/\u200B/g, "")
+      .replace(/\u200C/g, "")
+      .replace(/\u200D/g, "")
+      .replace(/\uFEFF/g, '')
+      .replace(/\u00A0/g, ' ');
+
     await Promise.all([
       writeFile(path.join(baseDir, 'question.md'), questionContent, { mode: 0o644 }),
-      writeFile(path.join(baseDir, 'question.d.ts'), content.code, { mode: 0o644 }),
+      writeFile(path.join(baseDir, 'question.d.ts'), cleanedCode, { mode: 0o644 }),
       writeFile(path.join(baseDir, 'tests.ts'), content.tests, { mode: 0o644 }),
       writeFile(path.join(baseDir, 'tsconfig.json'), JSON.stringify(tsConfig, null, 2), {
         mode: 0o644,
