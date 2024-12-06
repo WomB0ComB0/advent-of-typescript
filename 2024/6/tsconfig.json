@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "paths": {
+      "*": ["./*"]
+    }
+  },
+  "include": ["question.d.ts", "tests.ts"]
+}

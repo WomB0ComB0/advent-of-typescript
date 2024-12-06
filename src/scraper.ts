@@ -4,10 +4,10 @@
  */
 
 import path from 'path';
+import { $ } from 'bun';
 import * as cheerio from 'cheerio';
 import { mkdir, rm, writeFile } from 'fs/promises';
 import puppeteer from 'puppeteer';
-import { $ } from 'bun';
 import type { Browser, Page } from 'puppeteer';
 
 /**
@@ -194,9 +194,9 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
     };
 
     const cleanedCode = content.code
-      .replace(/\u200B/g, "")
-      .replace(/\u200C/g, "")
-      .replace(/\u200D/g, "")
+      .replace(/\u200B/g, '')
+      .replace(/\u200C/g, '')
+      .replace(/\u200D/g, '')
       .replace(/\uFEFF/g, '')
       .replace(/\u00A0/g, ' ');
 

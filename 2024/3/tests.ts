@@ -1,4 +1,3 @@
-
 export const reportForSanta = {
   2009: survivalRatio(2009),
   2010: survivalRatio(2010),
@@ -15,7 +14,7 @@ export const reportForSanta = {
   2021: survivalRatio(2021),
   2022: survivalRatio(2022),
   2023: survivalRatio(2023),
-}
+};
 
 // @ts-expect-error
 survivalRatio('1');
