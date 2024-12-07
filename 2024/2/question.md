@@ -11,36 +11,10 @@
 [🎩Bernard] Over my dead body.  It's the only thing that makes me feel good in this nightmare of a job.
 
 Yesterday ☄️Comet and 💨Dasher just gave number as their demand to 🎅Santa.  That's not nearly specific enough.  We're gonna need something much more specific.
-
 Look at the tests.  See what we can change to make them all pass.
-
 Hint
 In TypeScript, we can specify types with primitives like `number` and `boolean` and `string` but we can also specify types with _type literals_ like `1`, `true`, and `"abcd"`.  In this case, you can see that the tests are showing you that you need to provide a _number literal_ to make the tests pass.
 
 prompt by Dimitri Mitropoulos on behalf of Michigan TypeScript
 
 code by Dimitri Mitropoulos on behalf of SquiggleConf
-
-## Initial Code
-```typescript
-type Demand = number;
-
-```
-
-## Tests
-```typescript
-import type { Expect, Equal } from 'type-testing';
-
-type t0_actual = Demand;        // => type t0_actual = number
-type t0_expected = 900_000; // => type t0_expected = 900000
-type t0 = Expect<Equal<t0_actual, t0_expected>>;
-
-/*
-* Sometimes, throughout Advent of TypeScript, you'll see a test that asserts there _is_ a type error, often to ensure that you're providing a correct implementation.
-* In this example, passing `number` isn't good enough, so we're highlighting that to you by showing that would cause a type error if `number` is the value of `Demand`.
-*/
-
-// @ts-expect-error
-type e0 = Expect<Equal<Demand, number>>;
-
-```

@@ -4,8 +4,13 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "paths": {
-      "*": ["./*"]
+      "*": [
+        "./*"
+      ]
     }
   },
-  "include": ["question.d.ts", "tests.ts"]
+  "include": [
+    "question.d.ts",
+    "tests.ts"
+  ]
 }

@@ -10,37 +10,9 @@
 [🎅Santa] Well for one thing, the route should be should be able to handle any arbitrary input!  And while you’re at it, make the route solar-powered. The PR team says it’s time we went carbon neutral.
 
 🎅Santa is hard to please.  That much is for sure.  To appease him, we want a function that will accept any input and return a value that has exactly the same type.
-
 Hint
 You need to find some way to pass this function a _parameter_ which is, itself, a type.  There's a generic and general purpose syntax for doing this.  Are you familiar with it?
 
 prompt by Dimitri Mitropoulos on behalf of Michigan TypeScript
 
 code by Dimitri Mitropoulos on behalf of SquiggleConf>
-
-## Initial Code
-```typescript
-const createRoute = (author: string, route: unknown) => {
-console.log(`[createRoute] route created by ${author} at ${Date.now()}`);
-return route
-}
-
-```
-
-## Tests
-```typescript
-import type { Expect, Equal } from 'type-testing';
-
-const oneMill = createRoute('💨Dasher', 100_000_000);
-type t0_actual = typeof oneMill;  // => type t0_actual = unknown
-type t0_expected = 100_000_000; // => type t0_expected = 100000000
-type t0 = Expect<Equal<t0_actual, t0_expected>>;
-
-const two = createRoute('💃Dancer', 2);
-type t1_actual = typeof two; // => type t1_actual = unknown
-type t1_expected = 2;      // => type t1_expected = 2
-type t1 = Expect<Equal<t1_actual, t1_expected>>;
-
-const three = createRoute('🦌Prancer', 2);
-type t2_actual = typeof three; // => type t2_actual = unknown
-```
