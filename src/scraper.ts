@@ -10,11 +10,9 @@
  */
 
 import path from 'path';
-import { $ } from 'bun';
 import * as cheerio from 'cheerio';
 import { mkdir, rm, writeFile } from 'fs/promises';
 import puppeteer from 'puppeteer';
-import type { Browser, Page } from 'puppeteer';
 
 declare global {
   interface Window {
@@ -71,20 +69,26 @@ async function extractChallenge(html: string): Promise<Challenge> {
       throw new ScraperError('No description found');
     }
 
-    const allLines = $('.view-line').map((_, line) => {
-      const spans = $(line).find('span span');
-      return spans.map((_, span) => $(span).text()).get().join('');
-    }).get();
+    const allLines = $('.view-line')
+      .map((_, line) => {
+        const spans = $(line).find('span span');
+        return spans
+          .map((_, span) => $(span).text())
+          .get()
+          .join('');
+      })
+      .get();
 
     console.log('All lines:', allLines);
 
-    let separationIndex = allLines.findIndex(line => line.includes('type test'));
+    let separationIndex = allLines.findIndex((line) => line.includes('type test'));
     if (separationIndex === -1) {
-      const firstContentIndex = allLines.findIndex(line => line.trim().length > 0);
-      const firstEmptyAfterContent = allLines.findIndex((line, i) =>
-        i > firstContentIndex && line.trim().length === 0
+      const firstContentIndex = allLines.findIndex((line) => line.trim().length > 0);
+      const firstEmptyAfterContent = allLines.findIndex(
+        (line, i) => i > firstContentIndex && line.trim().length === 0,
       );
-      separationIndex = firstEmptyAfterContent !== -1 ? firstEmptyAfterContent : Math.floor(allLines.length / 2);
+      separationIndex =
+        firstEmptyAfterContent !== -1 ? firstEmptyAfterContent : Math.floor(allLines.length / 2);
     }
 
     const code = allLines.slice(0, separationIndex).join('\n').trim();
@@ -96,10 +100,10 @@ async function extractChallenge(html: string): Promise<Challenge> {
         separationIndex,
         codeLength: code?.length,
         testsLength: tests?.length,
-        firstFewLines: allLines.slice(0, 3)
+        firstFewLines: allLines.slice(0, 3),
       });
       throw new ScraperError(
-        `Missing content - Code length: ${code?.length}, Tests length: ${tests?.length}. Found ${allLines.length} lines.`
+        `Missing content - Code length: ${code?.length}, Tests length: ${tests?.length}. Found ${allLines.length} lines.`,
       );
     }
 
@@ -131,7 +135,7 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
       width: 3840,
       height: 2160,
       deviceScaleFactor: 1,
-    }
+    },
   });
   const page = await browser.newPage();
 
@@ -139,64 +143,78 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
     const url = `https://www.adventofts.com/events/${year}/${day}`;
     await page.goto(url, {
       waitUntil: ['networkidle0', 'domcontentloaded', 'load'],
-      timeout: 30000
+      timeout: 30000,
     });
 
-    await page.waitForFunction(() => {
-      const editor = document.querySelector('.monaco-editor');
-      return editor && editor.querySelector('.view-line') &&
-        window.monaco && window.monaco.editor.getModels().length > 0;
-    }, { timeout: 60000 });
+    await page.waitForFunction(
+      () => {
+        const editor = document.querySelector('.monaco-editor');
+        return (
+          editor &&
+          editor.querySelector('.view-line') &&
+          window.monaco &&
+          window.monaco.editor.getModels().length > 0
+        );
+      },
+      { timeout: 60000 },
+    );
 
     const models = await page.evaluate(() => {
       const monacoModels = (window as any).monaco.editor.getModels();
-      return monacoModels.map((model: any) => ({
-        uri: model.uri.toString(),
-        value: model.getValue(),
-        isTest: model.uri.toString().includes('test') ||
-          model.uri.toString().includes('type-testing') ||
-          model.getValue().includes('import type { Expect')
-      })).sort((a: any, b: any) => a.uri.localeCompare(b.uri));
+      return monacoModels
+        .map((model: any) => ({
+          uri: model.uri.toString(),
+          value: model.getValue(),
+          isTest:
+            model.uri.toString().includes('test') ||
+            model.uri.toString().includes('type-testing') ||
+            model.getValue().includes('import type { Expect'),
+        }))
+        .sort((a: any, b: any) => a.uri.localeCompare(b.uri));
     });
 
-    console.log('Found models:', models.map((m: any) => ({
-      uri: m.uri,
-      isTest: m.isTest,
-      preview: m.value.slice(0, 100)
-    })));
+    console.log(
+      'Found models:',
+      models.map((m: any) => ({
+        uri: m.uri,
+        isTest: m.isTest,
+        preview: m.value.slice(0, 100),
+      })),
+    );
 
-    const mainModel = models.find((m: any) =>
-      !m.isTest &&
-      m.value.length > 0 &&
-      !m.uri.includes('node_modules') &&
-      !m.value.includes('import') &&
-      (
-        m.uri.includes('user.ts') ||
-        /type\s+.*=/.test(m.value) ||
-        m.value.includes('export type')
-      )
+    const mainModel = models.find(
+      (m: any) =>
+        !m.isTest &&
+        m.value.length > 0 &&
+        !m.uri.includes('node_modules') &&
+        !m.value.includes('import') &&
+        (m.uri.includes('user.ts') ||
+          /type\s+.*=/.test(m.value) ||
+          m.value.includes('export type')),
     );
 
     if (!mainModel) {
-      throw new ScraperError(`Could not find main code content: ${models.map((m: any) => ({
-        uri: m.uri,
-        isTest: m.isTest,
-        length: m.value.length
-      }))
-        }`);
+      throw new ScraperError(
+        `Could not find main code content: ${models.map((m: any) => ({
+          uri: m.uri,
+          isTest: m.isTest,
+          length: m.value.length,
+        }))}`,
+      );
     }
 
     const code = mainModel.value;
 
-    const cleanContent = (content: string) => content
-      .replace(/\r\n/g, '\n')
-      .replace(/\u200B/g, '')
-      .replace(/\u200C/g, '')
-      .replace(/\u200D/g, '')
-      .replace(/\uFEFF/g, '')
-      .replace(/\u00A0/g, ' ')
-      .replace(/(['"])\1:/g, '$1:')
-      .trim();
+    const cleanContent = (content: string) =>
+      content
+        .replace(/\r\n/g, '\n')
+        .replace(/\u200B/g, '')
+        .replace(/\u200C/g, '')
+        .replace(/\u200D/g, '')
+        .replace(/\uFEFF/g, '')
+        .replace(/\u00A0/g, ' ')
+        .replace(/(['"])\1:/g, '$1:')
+        .trim();
 
     const description = await page.evaluate(() => {
       const descEl = document.querySelector('[data-testid="challenge-description"], .prose-invert');
@@ -207,34 +225,37 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
       throw new ScraperError('No description found');
     }
 
-    const testModel = models.find((m: any) =>
-      m.isTest &&
-      m.value.includes('import type { Expect') &&
-      !m.uri.includes('node_modules/type-testing')
+    const testModel = models.find(
+      (m: any) =>
+        m.isTest &&
+        m.value.includes('import type { Expect') &&
+        !m.uri.includes('node_modules/type-testing'),
     );
 
     if (!testModel) {
       console.warn('No test file found - this might be an issue');
     }
 
-    const tests = testModel ? cleanContent(testModel.value) : `import type { Expect, Equal } from 'type-testing';\n\n// Add tests here`;
+    const tests = testModel
+      ? cleanContent(testModel.value)
+      : `import type { Expect, Equal } from 'type-testing';\n\n// Add tests here`;
 
     console.log('Found tests:', {
       testModelUri: testModel?.uri,
       testPreview: testModel?.value.slice(0, 200),
-      finalTestContent: tests.slice(0, 200)
+      finalTestContent: tests.slice(0, 200),
     });
 
     return {
       description,
       code: cleanContent(code),
-      tests: tests
+      tests: tests,
     };
   } catch (error) {
     console.error('Error during page fetch:', error);
     await page.screenshot({
       path: `error-screenshot-${year}-${day}.png`,
-      fullPage: true
+      fullPage: true,
     });
     throw error;
   } finally {
@@ -313,7 +334,7 @@ async function saveChallenge(year: number, day: number, content: Challenge) {
 /**
  * Main execution function that orchestrates the scraping process
  * @async
- * @description 
+ * @description
  * - Parses command line arguments for year and day
  * - Validates input parameters
  * - Fetches challenge content using Puppeteer

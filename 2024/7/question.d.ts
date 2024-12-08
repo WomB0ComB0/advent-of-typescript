@@ -1,9 +1,4 @@
-const createRoute = <
-  Route extends string[]
->(
-  author: string,
-  route: [...Route]
-) => ({
+const createRoute = <Route extends string[]>(author: string, route: [...Route]) => ({
   author,
   route,
   createdAt: Date.now(),
