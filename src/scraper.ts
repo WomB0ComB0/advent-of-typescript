@@ -118,6 +118,17 @@ async function extractChallenge(html: string): Promise<Challenge> {
   }
 }
 
+const cleanContent = (content: string) =>
+  content
+    .replace(/\r\n/g, '\n')
+    .replace(/\u200B/g, '')
+    .replace(/\u200C/g, '')
+    .replace(/\u200D/g, '')
+    .replace(/\uFEFF/g, '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/(['"])\1:/g, '$1:')
+    .trim();
+
 /**
  * Fetches challenge content using Puppeteer headless browser
  * @async
@@ -193,38 +204,6 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
           m.value.includes('export type')),
     );
 
-    if (!mainModel) {
-      throw new ScraperError(
-        `Could not find main code content: ${models.map((m: any) => ({
-          uri: m.uri,
-          isTest: m.isTest,
-          length: m.value.length,
-        }))}`,
-      );
-    }
-
-    const code = mainModel.value;
-
-    const cleanContent = (content: string) =>
-      content
-        .replace(/\r\n/g, '\n')
-        .replace(/\u200B/g, '')
-        .replace(/\u200C/g, '')
-        .replace(/\u200D/g, '')
-        .replace(/\uFEFF/g, '')
-        .replace(/\u00A0/g, ' ')
-        .replace(/(['"])\1:/g, '$1:')
-        .trim();
-
-    const description = await page.evaluate(() => {
-      const descEl = document.querySelector('[data-testid="challenge-description"], .prose-invert');
-      return descEl ? descEl.textContent?.trim() : '';
-    });
-
-    if (!description) {
-      throw new ScraperError('No description found');
-    }
-
     const testModel = models.find(
       (m: any) =>
         m.isTest &&
@@ -245,6 +224,27 @@ async function fetchChallengeWithPuppeteer(year: number, day: number): Promise<C
       testPreview: testModel?.value.slice(0, 200),
       finalTestContent: tests.slice(0, 200),
     });
+
+    if (!mainModel && !testModel) {
+      throw new ScraperError(
+        `Could not find main code content or test content: ${models.map((m: any) => ({
+          uri: m.uri,
+          isTest: m.isTest,
+          length: m.value.length,
+        }))}`,
+      );
+    }
+
+    const code = mainModel?.value ?? '';
+
+    const description = await page.evaluate(() => {
+      const descEl = document.querySelector('[data-testid="challenge-description"], .prose-invert');
+      return descEl ? descEl.textContent?.trim() : '';
+    });
+
+    if (!description) {
+      throw new ScraperError('No description found');
+    }
 
     return {
       description,
