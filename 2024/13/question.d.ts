@@ -1,3 +1,3 @@
-type Demand<T> = {
-  demand: T;
+type Demand<in out T> = {
+  demand: T
 }

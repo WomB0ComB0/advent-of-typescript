@@ -1,1 +1,1 @@
-type ThankYouSoMuch = unknown;
+type ThankYouSoMuch = true;
